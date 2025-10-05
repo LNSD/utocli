@@ -93,10 +93,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "testlib"
-version = "0.0.0"
-
-[[package]]
 name = "tests"
 version = "0.0.0"
 
@@ -109,6 +105,9 @@ checksum = "f63a545481291138910575129486daeaf8ac54aee4387fe7906919f7830c7d9d"
 [[package]]
 name = "utocli"
 version = "0.0.0"
+dependencies = [
+ "utocli-core",
+]
 
 [[package]]
 name = "utocli-core"
