@@ -8,6 +8,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+utocli-core = { path = "../utocli-core" }
 
 [lints]
 workspace = true
