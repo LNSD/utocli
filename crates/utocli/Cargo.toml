@@ -1,0 +1,13 @@
+[package]
+name = "utocli"
+authors.workspace = true
+description = "Auto-generate OpenCLI specifications"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

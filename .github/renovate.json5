@@ -1,0 +1,87 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    ':semanticCommits',
+    ':semanticCommitTypeAll(chore)',
+    'helpers:pinGitHubActionDigests',
+  ],
+  timezone: 'Europe/Madrid',
+  schedule: [
+    'before 8am on Monday',
+  ],
+  configMigration: true,
+  rebaseWhen: 'behind-base-branch',
+  lockFileMaintenance: {
+    enabled: true,
+    automerge: true,
+    automergeType: 'branch',
+  },
+  packageRules: [
+    {
+      description: 'Automerge non-major updates',
+      matchUpdateTypes: [
+        'minor',
+        'patch',
+      ],
+      matchCurrentVersion: '!/^0/',
+      automerge: true,
+    },
+    {
+      groupName: 'futures crates',
+      groupSlug: 'futures',
+      matchManagers: [
+        'cargo',
+      ],
+      matchPackageNames: [
+        'futures',
+        'futures-{/,}**',
+        'futures_{/,}**',
+      ],
+    },
+    {
+      groupName: 'serde crates',
+      groupSlug: 'serde',
+      matchManagers: [
+        'cargo',
+      ],
+      matchPackageNames: [
+        'serde',
+        'serde-{/,}**',
+        'serde_{/,}**',
+      ],
+    },
+    {
+      groupName: 'tracing crates',
+      groupSlug: 'tracing',
+      matchManagers: [
+        'cargo',
+      ],
+      matchSourceUrls: [
+        'https://github.com/tokio-rs/tracing{/,}**',
+      ],
+      matchPackageNames: [
+        'tracing-{/,}**',
+        'tracing_{/,}**',
+      ],
+    },
+  ],
+  ignoreDeps: [
+    // Ignore serde_yaml because it is marked as deprecated. No new releases will be made
+    'serde_yaml',
+  ],
+  customManagers: [
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^rust-toolchain(\\.toml)?$/',
+      ],
+      matchStrings: [
+        'channel\\s*=\\s*"(?<currentValue>\\d+\\.\\d+\\.\\d+)"',
+      ],
+      depNameTemplate: 'rust',
+      packageNameTemplate: 'rust-lang/rust',
+      datasourceTemplate: 'github-releases',
+    },
+  ],
+}

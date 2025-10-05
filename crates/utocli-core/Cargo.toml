@@ -1,0 +1,13 @@
+[package]
+name = "utocli-core"
+authors.workspace = true
+description = "Core types and traits for utocli"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

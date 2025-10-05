@@ -1,0 +1,9 @@
+[package]
+name = "tests"
+edition.workspace = true
+publish = false
+
+[dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,97 @@
+name: ci
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+    - "main"
+    - "renovate/lock-file-maintenance"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+  NEXTEST_NO_TESTS: warn
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+          cache: false
+          rustflags: ''
+
+      - run: cargo +nightly fmt --all -- --check
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      ## Setup
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
+        with:
+          components: clippy,llvm-tools
+          cache: true
+          rustflags: ''
+
+      - name: Cache rust build files
+        uses: Leafwing-Studios/cargo-cache@43ec9a5bad6e7f174e7fc65dcf533de75ff65881 # v2
+
+      - name: Install Cargo LLVM cov
+        uses: baptiste0928/cargo-install@91c5da15570085bcde6f4d7aed98cb82d6769fd3 # v3
+        with:
+          crate: cargo-llvm-cov
+
+      - name: Install cargo-nextest
+        uses: baptiste0928/cargo-install@91c5da15570085bcde6f4d7aed98cb82d6769fd3 # v3
+        with:
+          crate: cargo-nextest
+          version: ^0.9
+
+      ## Linting
+      - name: Cargo clippy
+        run: cargo clippy --all-features --tests -- -D warnings --force-warn deprecated --force-warn dead-code
+
+      ## Tests
+      - name: Unit tests
+        run: cargo llvm-cov nextest --all-features 'tests::' --lcov --output-path unit-lcov.info -- --skip 'tests::it_'
+
+      - name: Doc tests
+        # TODO: Collect doc tests coverage once nextest supports it
+        # https://nexte.st/docs/integrations/test-coverage/?h=doc#collecting-coverage-data-from-doctests
+        run: cargo test --all-features --doc
+
+      - name: Integration tests (in-tree)
+        run: cargo llvm-cov nextest --all-features 'tests::it_' --lcov --output-path it-intree-lcov.info
+
+      - name: Integration tests (public api)
+        run: cargo llvm-cov nextest --all-features --test '*' --lcov --output-path it-public-lcov.info
+
+      - name: Upload unit tests coverage report to codecov
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: unit-lcov.info
+          flags: unit
+
+      - name: Upload integration tests coverage report to codecov
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: it-intree-lcov.info,it-public-lcov.info
+          flags: integration
