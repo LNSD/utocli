@@ -19,5 +19,8 @@ future-incompatible = { level = "deny", priority = -1 }
 nonstandard-style = { level = "deny", priority = -1 }
 unused = { level = "deny", priority = -1 }
 
+# Allow the fetch_opencli_schema cfg flag used for conditional OpenCLI spec download
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fetch_opencli_schema)'] }
+
 [workspace.lints.clippy]
 all = "deny"
