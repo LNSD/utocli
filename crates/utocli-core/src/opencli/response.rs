@@ -1,8 +1,6 @@
 //! Response and media type entities.
 
-use std::collections::BTreeMap;
-
-use super::{Schema, schema::RefOr};
+use super::{Schema, map::Map, schema::RefOr};
 
 /// Describes command exit codes and output formats.
 ///
@@ -21,7 +19,7 @@ pub struct Response {
     /// - `application/json` - JSON formatted output
     /// - `application/yaml` - YAML formatted output
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub content: Option<BTreeMap<String, MediaType>>,
+    pub content: Option<Map<String, MediaType>>,
 }
 
 impl Response {
@@ -40,7 +38,7 @@ impl Response {
     }
 
     /// Sets the content (media types) for the response.
-    pub fn content(mut self, content: BTreeMap<String, MediaType>) -> Self {
+    pub fn content(mut self, content: Map<String, MediaType>) -> Self {
         self.content = Some(content);
         self
     }

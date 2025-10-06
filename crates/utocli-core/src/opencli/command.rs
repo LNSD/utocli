@@ -1,8 +1,6 @@
 //! Command entity for CLI commands.
 
-use std::collections::BTreeMap;
-
-use super::{Parameter, Response, extensions::Extensions};
+use super::{Parameter, Response, extensions::Extensions, map::Map};
 
 /// Represents a CLI command with its parameters and responses.
 ///
@@ -35,7 +33,7 @@ pub struct Command {
 
     /// Responses keyed by exit code (e.g., "0", "1", "2").
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub responses: Option<BTreeMap<String, Response>>,
+    pub responses: Option<Map<String, Response>>,
 
     /// Extension properties.
     #[serde(skip_serializing_if = "Option::is_none", flatten)]
@@ -94,7 +92,7 @@ impl Command {
     }
 
     /// Sets the responses for the command.
-    pub fn responses(mut self, responses: BTreeMap<String, Response>) -> Self {
+    pub fn responses(mut self, responses: Map<String, Response>) -> Self {
         self.responses = Some(responses);
         self
     }
@@ -117,4 +115,4 @@ impl Default for Command {
 /// Commands can be nested to represent subcommands. For example:
 /// - "build" -> Command
 /// - "build.watch" -> Subcommand of build
-pub type Commands = BTreeMap<String, Command>;
+pub type Commands = Map<String, Command>;

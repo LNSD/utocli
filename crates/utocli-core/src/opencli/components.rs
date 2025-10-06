@@ -1,8 +1,6 @@
 //! Components container for reusable definitions.
 
-use std::collections::BTreeMap;
-
-use super::{Parameter, Response, Schema, schema::RefOr};
+use super::{Parameter, Response, Schema, map::Map, schema::RefOr};
 
 /// Reusable component definitions.
 ///
@@ -12,15 +10,15 @@ use super::{Parameter, Response, Schema, schema::RefOr};
 pub struct Components {
     /// Reusable schema definitions.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub schemas: Option<BTreeMap<String, RefOr<Schema>>>,
+    pub schemas: Option<Map<String, RefOr<Schema>>>,
 
     /// Reusable parameter definitions.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameters: Option<BTreeMap<String, RefOr<Parameter>>>,
+    pub parameters: Option<Map<String, RefOr<Parameter>>>,
 
     /// Reusable response definitions.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub responses: Option<BTreeMap<String, RefOr<Response>>>,
+    pub responses: Option<Map<String, RefOr<Response>>>,
 }
 
 impl Components {
@@ -30,19 +28,19 @@ impl Components {
     }
 
     /// Sets the schemas.
-    pub fn schemas(mut self, schemas: BTreeMap<String, RefOr<Schema>>) -> Self {
+    pub fn schemas(mut self, schemas: Map<String, RefOr<Schema>>) -> Self {
         self.schemas = Some(schemas);
         self
     }
 
     /// Sets the parameters.
-    pub fn parameters(mut self, parameters: BTreeMap<String, RefOr<Parameter>>) -> Self {
+    pub fn parameters(mut self, parameters: Map<String, RefOr<Parameter>>) -> Self {
         self.parameters = Some(parameters);
         self
     }
 
     /// Sets the responses.
-    pub fn responses(mut self, responses: BTreeMap<String, RefOr<Response>>) -> Self {
+    pub fn responses(mut self, responses: Map<String, RefOr<Response>>) -> Self {
         self.responses = Some(responses);
         self
     }

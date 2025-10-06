@@ -11,7 +11,7 @@ pub mod opencli;
 // Re-export main types at the crate root for convenience
 pub use self::opencli::{
     Architecture, Arity, Array, Command, Commands, Components, Contact, EnvironmentVariable,
-    Extensions, ExternalDocs, Info, License, MediaType, Object, OpenCli, Parameter, ParameterIn,
-    ParameterScope, Platform, PlatformName, Ref, RefOr, Response, Schema, SchemaFormat, SchemaType,
-    Tag,
+    Extensions, ExternalDocs, Info, License, Map, MediaType, Object, OpenCli, Parameter,
+    ParameterIn, ParameterScope, Platform, PlatformName, Ref, RefOr, Response, Schema,
+    SchemaFormat, SchemaType, Tag,
 };

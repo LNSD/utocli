@@ -11,6 +11,7 @@ pub mod environment;
 pub mod extensions;
 pub mod external_docs;
 pub mod info;
+pub mod map;
 pub mod parameter;
 pub mod platform;
 pub mod response;
@@ -24,6 +25,7 @@ pub use self::{
     extensions::Extensions,
     external_docs::ExternalDocs,
     info::{Contact, Info, License},
+    map::Map,
     parameter::{Arity, Parameter, ParameterIn, ParameterScope},
     platform::{Architecture, Platform, PlatformName},
     response::{MediaType, Response},

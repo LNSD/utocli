@@ -3,8 +3,6 @@
 //! This test suite builds a comprehensive OpenCLI specification using the builder API,
 //! based on the official OpenCLI specification example.
 
-use std::collections::BTreeMap;
-
 use utocli::*;
 
 #[test]
@@ -115,14 +113,14 @@ fn build_tags() -> Vec<Tag> {
 
 /// Builds the components section with reusable schemas.
 fn build_components() -> Components {
-    let mut schemas = BTreeMap::new();
+    let mut schemas = Map::new();
 
     // Error schema
     let error_schema = Schema::Object(Box::new(
         Object::new()
             .schema_type(SchemaType::Object)
             .properties({
-                let mut props = BTreeMap::new();
+                let mut props = Map::new();
                 props.insert(
                     "code".to_string(),
                     RefOr::T(Schema::Object(Box::new(
@@ -154,7 +152,7 @@ fn build_components() -> Components {
         Object::new()
             .schema_type(SchemaType::Object)
             .properties({
-                let mut props = BTreeMap::new();
+                let mut props = Map::new();
                 props.insert(
                     "line".to_string(),
                     RefOr::T(Schema::Object(Box::new(
@@ -193,34 +191,37 @@ fn build_components() -> Components {
 
     // ValidationResult schema
     let validation_result_schema = Schema::Object(Box::new(
-        Object::new().schema_type(SchemaType::Object).properties({
-            let mut props = BTreeMap::new();
-            props.insert(
-                "valid".to_string(),
-                RefOr::T(Schema::Object(Box::new(
-                    Object::new().schema_type(SchemaType::Boolean),
-                ))),
-            );
-            props.insert(
-                "file".to_string(),
-                RefOr::T(Schema::Object(Box::new(
-                    Object::new().schema_type(SchemaType::String),
-                ))),
-            );
-            props.insert(
-                "errors".to_string(),
-                RefOr::T(Schema::Array(Array::new().items(RefOr::Ref(Ref {
-                    ref_path: "#/components/schemas/ValidationError".to_string(),
-                })))),
-            );
-            props.insert(
-                "warnings".to_string(),
-                RefOr::T(Schema::Array(Array::new().items(RefOr::T(Schema::Object(
-                    Box::new(Object::new().schema_type(SchemaType::String)),
-                ))))),
-            );
-            props
-        }),
+        Object::new()
+            .schema_type(SchemaType::Object)
+            .properties({
+                let mut props = Map::new();
+                props.insert(
+                    "valid".to_string(),
+                    RefOr::T(Schema::Object(Box::new(
+                        Object::new().schema_type(SchemaType::Boolean),
+                    ))),
+                );
+                props.insert(
+                    "file".to_string(),
+                    RefOr::T(Schema::Object(Box::new(
+                        Object::new().schema_type(SchemaType::String),
+                    ))),
+                );
+                props.insert(
+                    "errors".to_string(),
+                    RefOr::T(Schema::Array(Array::new().items(RefOr::Ref(Ref {
+                        ref_path: "#/components/schemas/ValidationError".to_string(),
+                    })))),
+                );
+                props.insert(
+                    "warnings".to_string(),
+                    RefOr::T(Schema::Array(Array::new().items(RefOr::T(Schema::Object(
+                        Box::new(Object::new().schema_type(SchemaType::String)),
+                    ))))),
+                );
+                props
+            })
+            .required(vec!["valid".to_string(), "file".to_string()]),
     ));
     schemas.insert(
         "ValidationResult".to_string(),
@@ -232,7 +233,7 @@ fn build_components() -> Components {
         Object::new()
             .schema_type(SchemaType::Object)
             .properties({
-                let mut props = BTreeMap::new();
+                let mut props = Map::new();
                 props.insert(
                     "path".to_string(),
                     RefOr::T(Schema::Object(Box::new(
@@ -248,7 +249,13 @@ fn build_components() -> Components {
                 props.insert(
                     "type".to_string(),
                     RefOr::T(Schema::Object(Box::new(
-                        Object::new().schema_type(SchemaType::String),
+                        Object::new()
+                            .schema_type(SchemaType::String)
+                            .enum_values(vec![
+                                serde_json::Value::String("source".to_string()),
+                                serde_json::Value::String("documentation".to_string()),
+                                serde_json::Value::String("configuration".to_string()),
+                            ]),
                     ))),
                 );
                 props
@@ -262,7 +269,7 @@ fn build_components() -> Components {
         Object::new()
             .schema_type(SchemaType::Object)
             .properties({
-                let mut props = BTreeMap::new();
+                let mut props = Map::new();
                 props.insert(
                     "success".to_string(),
                     RefOr::T(Schema::Object(Box::new(
@@ -302,7 +309,153 @@ fn build_components() -> Components {
         RefOr::T(generation_result_schema),
     );
 
-    Components::new().schemas(schemas)
+    // Build parameters
+    let mut parameters = Map::new();
+
+    parameters.insert(
+        "ConfigFile".to_string(),
+        RefOr::T(
+            Parameter::new("config")
+                .alias(vec!["c".to_string()])
+                .description("Path to configuration file")
+                .scope(ParameterScope::Inherited)
+                .schema(RefOr::T(Schema::Object(Box::new(
+                    Object::new()
+                        .schema_type(SchemaType::String)
+                        .format(SchemaFormat::Path)
+                        .example(serde_json::Value::String(
+                            "~/.config/ocs/config.yaml".to_string(),
+                        )),
+                )))),
+        ),
+    );
+
+    parameters.insert(
+        "OutputFormat".to_string(),
+        RefOr::T(
+            Parameter::new("output")
+                .alias(vec!["o".to_string()])
+                .description("Output format for results")
+                .scope(ParameterScope::Local)
+                .schema(RefOr::T(Schema::Object(Box::new(
+                    Object::new()
+                        .schema_type(SchemaType::String)
+                        .enum_values(vec![
+                            serde_json::Value::String("json".to_string()),
+                            serde_json::Value::String("yaml".to_string()),
+                            serde_json::Value::String("text".to_string()),
+                        ])
+                        .default_value(serde_json::Value::String("text".to_string())),
+                )))),
+        ),
+    );
+
+    // Build responses
+    let mut responses = Map::new();
+
+    responses.insert(
+        "ValidationSuccess".to_string(),
+        RefOr::T(
+            Response::new()
+                .description("Validation completed successfully")
+                .content({
+                    let mut content = Map::new();
+                    content.insert(
+                        "application/json".to_string(),
+                        MediaType::new()
+                            .schema(RefOr::Ref(Ref {
+                                ref_path: "#/components/schemas/ValidationResult".to_string(),
+                            }))
+                            .example(serde_json::json!({
+                                "valid": true,
+                                "file": "spec.yaml",
+                                "errors": [],
+                                "warnings": []
+                            })),
+                    );
+                    content.insert(
+                        "text/plain".to_string(),
+                        MediaType::new().example(serde_json::Value::String(
+                            "✓ Validation successful\nNo errors found\n".to_string(),
+                        )),
+                    );
+                    content
+                }),
+        ),
+    );
+
+    responses.insert(
+        "ValidationFailed".to_string(),
+        RefOr::T(
+            Response::new()
+                .description("Validation failed with errors")
+                .content({
+                    let mut content = Map::new();
+                    content.insert(
+                        "application/json".to_string(),
+                        MediaType::new()
+                            .schema(RefOr::Ref(Ref {
+                                ref_path: "#/components/schemas/ValidationResult".to_string(),
+                            }))
+                            .example(serde_json::json!({
+                                "valid": false,
+                                "file": "invalid-spec.yaml",
+                                "errors": [
+                                    {
+                                        "line": 5,
+                                        "message": "Missing required field",
+                                        "severity": "error"
+                                    }
+                                ],
+                                "warnings": []
+                            })),
+                    );
+                    content.insert(
+                        "text/plain".to_string(),
+                        MediaType::new().example(serde_json::Value::String(
+                            "✗ Validation failed\n1 error found\n".to_string(),
+                        )),
+                    );
+                    content
+                }),
+        ),
+    );
+
+    responses.insert(
+        "FileNotFound".to_string(),
+        RefOr::T(
+            Response::new()
+                .description("File not found or not readable")
+                .content({
+                    let mut content = Map::new();
+                    content.insert(
+                        "application/json".to_string(),
+                        MediaType::new()
+                            .schema(RefOr::Ref(Ref {
+                                ref_path: "#/components/schemas/Error".to_string(),
+                            }))
+                            .example(serde_json::json!({
+                                "code": 2,
+                                "message": "File not found",
+                                "details": "Could not read the specified file"
+                            })),
+                    );
+                    content.insert(
+                        "text/plain".to_string(),
+                        MediaType::new()
+                            .example(serde_json::Value::String(
+                                "✗ Error: File not found\nCould not read the specified file\nPlease check the file path and permissions\n".to_string(),
+                            )),
+                    );
+                    content
+                }),
+        ),
+    );
+
+    Components::new()
+        .schemas(schemas)
+        .parameters(parameters)
+        .responses(responses)
 }
 
 /// Builds all commands for the CLI.
@@ -378,14 +531,14 @@ fn build_root_command_parameters() -> Vec<Parameter> {
 }
 
 /// Builds responses for the root command.
-fn build_root_command_responses() -> BTreeMap<String, Response> {
-    let mut responses = BTreeMap::new();
+fn build_root_command_responses() -> Map<String, Response> {
+    let mut responses = Map::new();
     responses.insert(
         "0".to_string(),
         Response::new()
             .description("Version information displayed")
             .content({
-                let mut content = BTreeMap::new();
+                let mut content = Map::new();
                 content.insert(
                     "text/plain".to_string(),
                     MediaType::new().example(serde_json::Value::String(
@@ -398,7 +551,7 @@ fn build_root_command_responses() -> BTreeMap<String, Response> {
                     MediaType::new()
                         .schema(RefOr::T(Schema::Object(Box::new(
                             Object::new().schema_type(SchemaType::Object).properties({
-                                let mut props = BTreeMap::new();
+                                let mut props = Map::new();
                                 props.insert(
                                     "cli_version".to_string(),
                                     RefOr::T(Schema::Object(Box::new(
@@ -424,7 +577,7 @@ fn build_root_command_responses() -> BTreeMap<String, Response> {
                                             Object::new()
                                                 .schema_type(SchemaType::Object)
                                                 .properties({
-                                                    let mut cmd_props = BTreeMap::new();
+                                                    let mut cmd_props = Map::new();
                                                     cmd_props.insert(
                                                         "name".to_string(),
                                                         RefOr::T(Schema::Object(Box::new(
@@ -475,7 +628,7 @@ fn build_root_command_responses() -> BTreeMap<String, Response> {
 
 /// Builds the '/validate' subcommand.
 fn build_validate_command() -> Command {
-    let mut extensions = BTreeMap::new();
+    let mut extensions = Map::new();
     extensions.insert(
         "x-cli-category".to_string(),
         serde_json::Value::String("validation".to_string()),
@@ -498,7 +651,7 @@ fn build_validate_command() -> Command {
 
 /// Builds parameters for the validate command.
 fn build_validate_command_parameters() -> Vec<Parameter> {
-    let mut file_extensions = BTreeMap::new();
+    let mut file_extensions = Map::new();
     file_extensions.insert(
         "x-completion".to_string(),
         serde_json::Value::String("file".to_string()),
@@ -547,14 +700,14 @@ fn build_validate_command_parameters() -> Vec<Parameter> {
 }
 
 /// Builds responses for the validate command.
-fn build_validate_command_responses() -> BTreeMap<String, Response> {
-    let mut responses = BTreeMap::new();
+fn build_validate_command_responses() -> Map<String, Response> {
+    let mut responses = Map::new();
     responses.insert(
         "0".to_string(),
         Response::new()
             .description("Validation successful")
             .content({
-                let mut content = BTreeMap::new();
+                let mut content = Map::new();
                 content.insert(
                     "text/plain".to_string(),
                     MediaType::new().example(serde_json::Value::String(
@@ -566,7 +719,7 @@ fn build_validate_command_responses() -> BTreeMap<String, Response> {
                     MediaType::new()
                         .schema(RefOr::T(Schema::Object(Box::new(
                             Object::new().schema_type(SchemaType::Object).properties({
-                                let mut props = BTreeMap::new();
+                                let mut props = Map::new();
                                 props.insert(
                                     "valid".to_string(),
                                     RefOr::T(Schema::Object(Box::new(
@@ -617,7 +770,7 @@ fn build_validate_command_responses() -> BTreeMap<String, Response> {
     responses.insert(
         "1".to_string(),
         Response::new().description("Validation failed").content({
-            let mut content = BTreeMap::new();
+            let mut content = Map::new();
             content.insert(
                 "text/plain".to_string(),
                 MediaType::new().example(serde_json::Value::String(
@@ -656,7 +809,7 @@ fn build_validate_command_responses() -> BTreeMap<String, Response> {
         Response::new()
             .description("File not found or not readable")
             .content({
-                let mut content = BTreeMap::new();
+                let mut content = Map::new();
                 content.insert(
                     "text/plain".to_string(),
                     MediaType::new().example(serde_json::Value::String(
@@ -752,14 +905,14 @@ fn build_generate_command_parameters() -> Vec<Parameter> {
 }
 
 /// Builds responses for the generate command.
-fn build_generate_command_responses() -> BTreeMap<String, Response> {
-    let mut responses = BTreeMap::new();
+fn build_generate_command_responses() -> Map<String, Response> {
+    let mut responses = Map::new();
     responses.insert(
         "0".to_string(),
         Response::new()
             .description("Code generation successful")
             .content({
-                let mut content = BTreeMap::new();
+                let mut content = Map::new();
                 content.insert(
                     "text/plain".to_string(),
                     MediaType::new().example(serde_json::Value::String(
@@ -802,7 +955,7 @@ fn build_generate_command_responses() -> BTreeMap<String, Response> {
     responses.insert(
         "1".to_string(),
         Response::new().description("Generation failed").content({
-            let mut content = BTreeMap::new();
+            let mut content = Map::new();
             content.insert(
                 "text/plain".to_string(),
                 MediaType::new().example(serde_json::Value::String(
@@ -879,19 +1032,19 @@ fn build_lint_command_parameters() -> Vec<Parameter> {
 }
 
 /// Builds responses for the lint command.
-fn build_lint_command_responses() -> BTreeMap<String, Response> {
-    let mut responses = BTreeMap::new();
+fn build_lint_command_responses() -> Map<String, Response> {
+    let mut responses = Map::new();
     responses.insert(
         "0".to_string(),
         Response::new()
             .description("Linting completed successfully")
             .content({
-                let mut content = BTreeMap::new();
+                let mut content = Map::new();
                 content.insert(
                     "application/json".to_string(),
                     MediaType::new().schema(RefOr::T(Schema::Object(Box::new(
                         Object::new().schema_type(SchemaType::Object).properties({
-                            let mut props = BTreeMap::new();
+                            let mut props = Map::new();
                             props.insert(
                                 "files_checked".to_string(),
                                 RefOr::T(Schema::Object(Box::new(

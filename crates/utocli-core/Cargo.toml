@@ -7,7 +7,17 @@ license.workspace = true
 repository.workspace = true
 version.workspace = true
 
+
+[features]
+## Preserve insertion order in maps instead of using sorted order.
+##
+## When enabled, uses `IndexMap` instead of `BTreeMap` for all map types in the OpenCLI specification,
+## preserving the order in which keys are inserted during serialization and deserialization.
+preserve_order = ["indexmap"]
+
 [dependencies]
+cfg-if = "1.0"
+indexmap = { version = "2.0", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

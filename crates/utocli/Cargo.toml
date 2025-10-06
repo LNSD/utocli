@@ -7,6 +7,13 @@ license.workspace = true
 repository.workspace = true
 version.workspace = true
 
+[features]
+## Preserve insertion order in maps instead of using sorted order.
+##
+## When enabled, uses `IndexMap` instead of `BTreeMap` for all map types in the OpenCLI specification,
+## preserving the order in which keys are inserted during serialization and deserialization.
+preserve_order = ["utocli-core/preserve_order"]
+
 [dependencies]
 utocli-core = { path = "../utocli-core" }
 
