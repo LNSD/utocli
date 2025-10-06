@@ -1,5 +1,5 @@
 ---
-source: tests/tests/it_builder_kitchen_sink.rs
+source: tests/tests/it_derive_kitchen_sink.rs
 expression: yaml_output
 ---
 opencli: 1.0.0
@@ -13,6 +13,38 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
+externalDocs:
+  description: Find out more about OpenCLI
+  url: https://www.openclispec.org
+platforms:
+- name: linux
+  architectures:
+  - amd64
+  - arm64
+- name: darwin
+  architectures:
+  - amd64
+  - arm64
+- name: windows
+  architectures:
+  - amd64
+  - arm64
+environment:
+- name: OCS_CONFIG_PATH
+  description: Override default configuration file path
+- name: OCS_VERBOSE
+  description: Enable verbose output globally
+- name: OCS_QUIET
+  description: Suppress non-essential output globally
+tags:
+- name: core
+  description: Core commands and utilities
+- name: data
+  description: Data processing commands
+- name: auth
+  description: Authentication and user management
+- name: system
+  description: System-level commands and utilities
 commands:
   ocs:
     summary: Open CLI Spec tool
@@ -394,18 +426,21 @@ components:
       required:
       - code
       - message
+    Severity:
+      type: string
+      enum:
+      - Error
+      - Warning
     ValidationError:
       type: object
       properties:
         line:
           type: integer
+          format: int32
         message:
           type: string
         severity:
-          type: string
-          enum:
-          - error
-          - warning
+          $ref: '#/components/schemas/Severity'
       required:
       - line
       - message
@@ -428,6 +463,13 @@ components:
       required:
       - valid
       - file
+      - errors
+    GeneratedFileType:
+      type: string
+      enum:
+      - Source
+      - Documentation
+      - Configuration
     GeneratedFile:
       type: object
       properties:
@@ -435,12 +477,9 @@ components:
           type: string
         size:
           type: integer
+          format: int64
         type:
-          type: string
-          enum:
-          - source
-          - documentation
-          - configuration
+          $ref: '#/components/schemas/GeneratedFileType'
       required:
       - path
       - type
@@ -535,35 +574,3 @@ components:
             ✗ Error: File not found
             Could not read the specified file
             Please check the file path and permissions
-tags:
-- name: core
-  description: Core commands and utilities
-- name: data
-  description: Data processing commands
-- name: auth
-  description: Authentication and user management
-- name: system
-  description: System-level commands and utilities
-platforms:
-- name: linux
-  architectures:
-  - amd64
-  - arm64
-- name: darwin
-  architectures:
-  - amd64
-  - arm64
-- name: windows
-  architectures:
-  - amd64
-  - arm64
-environment:
-- name: OCS_CONFIG_PATH
-  description: Override default configuration file path
-- name: OCS_VERBOSE
-  description: Enable verbose output globally
-- name: OCS_QUIET
-  description: Suppress non-essential output globally
-externalDocs:
-  description: Find out more about OpenCLI
-  url: https://www.openclispec.org

@@ -51,6 +51,10 @@ pub struct Object {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub schema_type: Option<SchemaType>,
 
+    /// A description of the schema.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
     /// The schema format.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SchemaFormat>,
@@ -94,6 +98,53 @@ pub struct Object {
     /// Pattern for string types (regular expression).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pattern: Option<String>,
+
+    /// Multiple of value for numeric types.
+    #[serde(rename = "multipleOf", skip_serializing_if = "Option::is_none")]
+    pub multiple_of: Option<f64>,
+
+    /// Exclusive minimum value for numeric types.
+    #[serde(rename = "exclusiveMinimum", skip_serializing_if = "Option::is_none")]
+    pub exclusive_minimum: Option<bool>,
+
+    /// Exclusive maximum value for numeric types.
+    #[serde(rename = "exclusiveMaximum", skip_serializing_if = "Option::is_none")]
+    pub exclusive_maximum: Option<bool>,
+
+    /// Maximum number of properties for object types.
+    #[serde(rename = "maxProperties", skip_serializing_if = "Option::is_none")]
+    pub max_properties: Option<usize>,
+
+    /// Minimum number of properties for object types.
+    #[serde(rename = "minProperties", skip_serializing_if = "Option::is_none")]
+    pub min_properties: Option<usize>,
+
+    /// Title of the schema.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+
+    /// Whether the schema is deprecated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deprecated: Option<bool>,
+
+    /// Whether the field is read-only.
+    #[serde(rename = "readOnly", skip_serializing_if = "Option::is_none")]
+    pub read_only: Option<bool>,
+
+    /// Whether the field is write-only.
+    #[serde(rename = "writeOnly", skip_serializing_if = "Option::is_none")]
+    pub write_only: Option<bool>,
+
+    /// Whether the value can be null.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nullable: Option<bool>,
+
+    /// Whether additional properties are allowed (for object types).
+    #[serde(
+        rename = "additionalProperties",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub additional_properties: Option<bool>,
 }
 
 impl Object {
@@ -105,6 +156,12 @@ impl Object {
     /// Sets the schema type.
     pub fn schema_type(mut self, schema_type: SchemaType) -> Self {
         self.schema_type = Some(schema_type);
+        self
+    }
+
+    /// Sets the description.
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
         self
     }
 
@@ -127,8 +184,44 @@ impl Object {
     }
 
     /// Sets the example value.
-    pub fn example(mut self, value: serde_json::Value) -> Self {
-        self.example = Some(value);
+    pub fn example(mut self, value: impl Into<Option<serde_json::Value>>) -> Self {
+        self.example = value.into();
+        self
+    }
+
+    /// Sets the title.
+    pub fn title(mut self, title: Option<impl Into<String>>) -> Self {
+        self.title = title.map(|t| t.into());
+        self
+    }
+
+    /// Sets the deprecated flag.
+    pub fn deprecated(mut self, deprecated: Option<bool>) -> Self {
+        self.deprecated = deprecated;
+        self
+    }
+
+    /// Sets the read-only flag.
+    pub fn read_only(mut self, read_only: Option<bool>) -> Self {
+        self.read_only = read_only;
+        self
+    }
+
+    /// Sets the write-only flag.
+    pub fn write_only(mut self, write_only: Option<bool>) -> Self {
+        self.write_only = write_only;
+        self
+    }
+
+    /// Sets the nullable flag.
+    pub fn nullable(mut self, nullable: bool) -> Self {
+        self.nullable = Some(nullable);
+        self
+    }
+
+    /// Sets whether additional properties are allowed.
+    pub fn additional_properties(mut self, allowed: Option<bool>) -> Self {
+        self.additional_properties = allowed;
         self
     }
 
@@ -173,6 +266,36 @@ impl Object {
         self.pattern = Some(pattern.into());
         self
     }
+
+    /// Sets the multiple of value.
+    pub fn multiple_of(mut self, multiple_of: f64) -> Self {
+        self.multiple_of = Some(multiple_of);
+        self
+    }
+
+    /// Sets the exclusive minimum flag.
+    pub fn exclusive_minimum(mut self, exclusive_minimum: bool) -> Self {
+        self.exclusive_minimum = Some(exclusive_minimum);
+        self
+    }
+
+    /// Sets the exclusive maximum flag.
+    pub fn exclusive_maximum(mut self, exclusive_maximum: bool) -> Self {
+        self.exclusive_maximum = Some(exclusive_maximum);
+        self
+    }
+
+    /// Sets the maximum number of properties.
+    pub fn max_properties(mut self, max_properties: usize) -> Self {
+        self.max_properties = Some(max_properties);
+        self
+    }
+
+    /// Sets the minimum number of properties.
+    pub fn min_properties(mut self, min_properties: usize) -> Self {
+        self.min_properties = Some(min_properties);
+        self
+    }
 }
 
 /// An array schema definition.
@@ -185,6 +308,14 @@ pub struct Array {
     /// The schema for array items.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<RefOr<Schema>>>,
+
+    /// Maximum number of items in the array.
+    #[serde(rename = "maxItems", skip_serializing_if = "Option::is_none")]
+    pub max_items: Option<usize>,
+
+    /// Minimum number of items in the array.
+    #[serde(rename = "minItems", skip_serializing_if = "Option::is_none")]
+    pub min_items: Option<usize>,
 }
 
 impl Array {
@@ -193,12 +324,26 @@ impl Array {
         Self {
             schema_type: SchemaType::Array,
             items: None,
+            max_items: None,
+            min_items: None,
         }
     }
 
     /// Sets the items schema.
     pub fn items(mut self, items: RefOr<Schema>) -> Self {
         self.items = Some(Box::new(items));
+        self
+    }
+
+    /// Sets the maximum number of items.
+    pub fn max_items(mut self, max_items: usize) -> Self {
+        self.max_items = Some(max_items);
+        self
+    }
+
+    /// Sets the minimum number of items.
+    pub fn min_items(mut self, min_items: usize) -> Self {
+        self.min_items = Some(min_items);
         self
     }
 }
@@ -225,6 +370,8 @@ pub enum SchemaType {
     Array,
     /// Object type.
     Object,
+    /// Null type (for untagged enums and nullable values).
+    Null,
 }
 
 /// Schema format enumeration for additional type information.

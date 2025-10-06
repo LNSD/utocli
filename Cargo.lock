@@ -1440,6 +1440,7 @@ dependencies = [
  "insta",
  "jsonschema",
  "reqwest",
+ "serde",
  "serde_json",
  "serde_norway",
  "utocli",
@@ -1616,6 +1617,7 @@ name = "utocli"
 version = "0.0.0"
 dependencies = [
  "utocli-core",
+ "utocli-derive",
 ]
 
 [[package]]
@@ -1631,6 +1633,12 @@ dependencies = [
 [[package]]
 name = "utocli-derive"
 version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde_json",
+ "syn",
+]
 
 [[package]]
 name = "uuid"

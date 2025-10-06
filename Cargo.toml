@@ -1,10 +1,10 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/utocli",
-    "crates/utocli-core",
-    "crates/utocli-derive",
-    "tests",
+  "crates/utocli",
+  "crates/utocli-core",
+  "crates/utocli-derive",
+  "tests",
 ]
 
 [workspace.package]
@@ -20,8 +20,8 @@ future-incompatible = { level = "deny", priority = -1 }
 nonstandard-style = { level = "deny", priority = -1 }
 unused = { level = "deny", priority = -1 }
 
-# Allow the fetch_opencli_schema cfg flag used for conditional OpenCLI spec download
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fetch_opencli_schema)'] }
+# Allow custom cfg flags used across the workspace
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docsrs)', 'cfg(fetch_opencli_schema)'] }
 
 [workspace.lints.clippy]
 all = "deny"
