@@ -162,27 +162,27 @@ impl OpenCliBuilder {
     }
 
     /// Sets the components.
-    pub fn components(mut self, components: Option<Components>) -> Self {
-        crate::builder_macros::set_value!(self components components)
+    pub fn components(mut self, components: impl Into<Option<Components>>) -> Self {
+        crate::builder_macros::set_value!(self components components.into())
     }
 
     /// Sets the tags.
-    pub fn tags(mut self, tags: Option<Vec<Tag>>) -> Self {
-        crate::builder_macros::set_value!(self tags tags)
+    pub fn tags(mut self, tags: impl Into<Option<Vec<Tag>>>) -> Self {
+        crate::builder_macros::set_value!(self tags tags.into())
     }
 
     /// Sets the platforms.
-    pub fn platforms(mut self, platforms: Option<Vec<Platform>>) -> Self {
-        crate::builder_macros::set_value!(self platforms platforms)
+    pub fn platforms(mut self, platforms: impl Into<Option<Vec<Platform>>>) -> Self {
+        crate::builder_macros::set_value!(self platforms platforms.into())
     }
 
     /// Sets the environment variables.
-    pub fn environment(mut self, environment: Option<Vec<EnvironmentVariable>>) -> Self {
-        crate::builder_macros::set_value!(self environment environment)
+    pub fn environment(mut self, environment: impl Into<Option<Vec<EnvironmentVariable>>>) -> Self {
+        crate::builder_macros::set_value!(self environment environment.into())
     }
 
     /// Sets the external documentation.
-    pub fn external_docs(mut self, external_docs: Option<ExternalDocs>) -> Self {
-        crate::builder_macros::set_value!(self external_docs external_docs)
+    pub fn external_docs(mut self, external_docs: impl Into<Option<ExternalDocs>>) -> Self {
+        crate::builder_macros::set_value!(self external_docs external_docs.into())
     }
 }

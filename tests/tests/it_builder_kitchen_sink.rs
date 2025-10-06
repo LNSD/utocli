@@ -3,7 +3,11 @@
 //! This test suite builds a comprehensive OpenCLI specification using the builder API,
 //! based on the official OpenCLI specification example.
 
-use utocli::*;
+use utocli::opencli::{
+    Architecture, Arity, Array, Command, Commands, Components, Contact, EnvironmentVariable,
+    ExternalDocs, Info, License, Map, MediaType, Object, OpenCliBuilder, Parameter, ParameterScope,
+    Platform, PlatformName, Ref, RefOr, Response, Schema, SchemaFormat, SchemaType, Tag,
+};
 
 #[test]
 fn build_opencli_with_complete_spec_succeeds() {
@@ -17,13 +21,15 @@ fn build_opencli_with_complete_spec_succeeds() {
     let commands = build_commands();
 
     //* When
-    let opencli = OpenCli::new(info)
+    let opencli = OpenCliBuilder::new()
+        .info(info)
         .commands(commands)
         .components(components)
         .tags(tags)
         .platforms(platforms)
         .environment(environment)
-        .external_docs(external_docs);
+        .external_docs(external_docs)
+        .build();
     let json_output =
         serde_json::to_string_pretty(&opencli).expect("should serialize OpenCLI to JSON");
 
@@ -48,13 +54,15 @@ fn serialize_opencli_to_yaml_succeeds() {
     let commands = build_commands();
 
     //* When
-    let opencli = OpenCli::new(info)
+    let opencli = OpenCliBuilder::new()
+        .info(info)
         .commands(commands)
         .components(components)
         .tags(tags)
         .platforms(platforms)
         .environment(environment)
-        .external_docs(external_docs);
+        .external_docs(external_docs)
+        .build();
     let yaml_output = serde_norway::to_string(&opencli).expect("should serialize OpenCLI to YAML");
 
     //* Then
