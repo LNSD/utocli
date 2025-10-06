@@ -1,6 +1,6 @@
 //! Schema types and validation.
 
-use std::collections::BTreeMap;
+use super::map::Map;
 
 /// A schema definition or a reference to a schema component.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -69,7 +69,7 @@ pub struct Object {
 
     /// Properties for object types.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub properties: Option<BTreeMap<String, RefOr<Schema>>>,
+    pub properties: Option<Map<String, RefOr<Schema>>>,
 
     /// Required properties for object types.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -133,7 +133,7 @@ impl Object {
     }
 
     /// Sets the properties.
-    pub fn properties(mut self, properties: BTreeMap<String, RefOr<Schema>>) -> Self {
+    pub fn properties(mut self, properties: Map<String, RefOr<Schema>>) -> Self {
         self.properties = Some(properties);
         self
     }
