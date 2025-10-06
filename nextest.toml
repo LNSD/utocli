@@ -1,0 +1,41 @@
+# Nextest configuration for utocli workspace
+# See: https://nexte.st/docs/configuration/
+#
+# Test Organization (Four-Tier Strategy):
+# 1. Unit tests: #[cfg(test)] mod tests within src/ (no 'it_' submodule prefix)
+# 2. In-tree integration: #[cfg(test)] mod tests::it_* within src/ (has 'it_' submodule)
+# 3. Public API integration: <crate>/tests/ directory (can use it_*.rs naming)
+# 4. E2E tests: Workspace-level 'tests' crate
+#
+# Key insight: In-tree vs Public API differentiation is by LOCATION not naming.
+# - In-tree: Within src/ as #[cfg(test)] modules (kind(lib) or kind(bin))
+# - Public API: In <crate>/tests/ directories (kind(test))
+
+[profile.default]
+fail-fast = false
+
+# Unit tests: Tests within src/ in 'tests::' modules, excluding 'it_*' submodules
+# Location: src/ files with #[cfg(test)] mod tests { ... }
+# Filter: Not from tests crate, not integration test binary, not it_* submodule
+[profile.unit]
+default-filter = 'not package(tests) and not kind(test) and not binary(/it_/)'
+
+# In-tree integration tests: Tests within src/ in 'tests::it_*' submodules
+# Location: src/ files with #[cfg(test)] mod tests { mod it_* { ... } }
+# Filter: Has it_* in binary name, not integration test binary, not tests crate
+# Note: Both lib and bin crates can have in-tree integration tests
+[profile.it-intree]
+default-filter = 'binary(/it_/) and not kind(test) and not package(tests)'
+
+# Public API integration tests: Tests in <crate>/tests/ directories
+# Location: <crate>/tests/*.rs (e.g., crates/utocli/tests/it_api.rs)
+# Filter: Integration test binary (kind(test)), not from workspace tests crate
+# Note: Files can be named it_*.rs - the location differentiates from in-tree tests
+[profile.it-public]
+default-filter = 'kind(test) and not package(tests)'
+
+# E2E tests: Tests in the workspace-level 'tests' crate only
+# Location: <workspace-root>/tests/tests/*.rs (the separate 'tests' package)
+# Filter: Only tests from the 'tests' package
+[profile.e2e]
+default-filter = 'package(tests)'

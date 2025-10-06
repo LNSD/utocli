@@ -63,23 +63,245 @@ clippy-crate CRATE *EXTRA_FLAGS:
 
 ## Testing
 
-# Run all tests (unit and integration)
-test *EXTRA_FLAGS:
+alias test := test-all
+alias test-it-intree := test-integration-intree
+alias test-it-public := test-integration-public
+alias test-it-intree-cov := test-integration-intree-cov
+alias test-it-public-cov := test-integration-public-cov
+
+OUTPUT_LCOV_DIR := "target/lcov"
+
+# Run all tests (unit, doc, and integration)
+test-all: test-unit test-doc test-integration-intree test-integration-public
+
+# Run unit tests only
+test-unit *EXTRA_FLAGS:
     #!/usr/bin/env bash
     set -e # Exit on error
 
-    if command -v "cargo-nextest" &> /dev/null; then
-        cargo nextest run {{EXTRA_FLAGS}} --workspace
-    else
-        >&2 echo "================================================================="
-        >&2 echo "WARNING: cargo-nextest not found - using 'cargo test' fallback ⚠️"
+    # Check if cargo-nextest is installed
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
         >&2 echo ""
-        >&2 echo "For faster test execution, consider installing cargo-nextest:"
+        >&2 echo "Please install cargo-nextest using cargo:"
         >&2 echo "  cargo install --locked cargo-nextest@^0.9"
-        >&2 echo "================================================================="
-        sleep 1 # Give the user a moment to read the warning
-        cargo test {{EXTRA_FLAGS}} --workspace
+        >&2 echo "=============================================================="
+        exit 1
     fi
+
+    cargo nextest run --config-file nextest.toml --profile unit --no-tests warn --all-features {{EXTRA_FLAGS}}
+
+# Run documentation tests
+test-doc *EXTRA_FLAGS:
+    cargo test {{EXTRA_FLAGS}} --all-features --doc
+
+# Run integration tests (in-tree)
+test-integration-intree *EXTRA_FLAGS:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-nextest is installed
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    cargo nextest run --config-file nextest.toml --profile it-intree --no-tests warn --all-features {{EXTRA_FLAGS}}
+
+# Run integration tests (public API)
+test-integration-public *EXTRA_FLAGS:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-nextest is installed
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    cargo nextest run --config-file nextest.toml --profile it-public --no-tests warn --all-features --test '*' {{EXTRA_FLAGS}}
+
+# Run end-to-end tests (tests package)
+test-e2e *EXTRA_FLAGS:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-nextest is installed
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    cargo nextest run --config-file nextest.toml --profile e2e --all-features {{EXTRA_FLAGS}}
+
+# Run unit tests with code coverage
+test-unit-cov OUTPUT_DIR=OUTPUT_LCOV_DIR:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-llvm-cov and cargo-nextest are installed
+    if ! command -v "cargo-llvm-cov" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-llvm-cov' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-llvm-cov using cargo:"
+        >&2 echo "  cargo install cargo-llvm-cov"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    # Ensure output directory exists
+    mkdir -p {{OUTPUT_DIR}}
+
+    echo "Running unit tests with coverage..."
+    cargo llvm-cov nextest --config-file nextest.toml --profile unit --no-tests warn --all-features --lcov --output-path {{OUTPUT_DIR}}/unit-lcov.info
+
+    echo "✅ Coverage report generated: {{OUTPUT_DIR}}/unit-lcov.info"
+
+# Run integration tests (in-tree) with code coverage
+test-integration-intree-cov OUTPUT_DIR=OUTPUT_LCOV_DIR:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-llvm-cov and cargo-nextest are installed
+    if ! command -v "cargo-llvm-cov" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-llvm-cov' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-llvm-cov using cargo:"
+        >&2 echo "  cargo install cargo-llvm-cov"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    # Ensure output directory exists
+    mkdir -p {{OUTPUT_DIR}}
+
+    echo "Running integration tests (in-tree) with coverage..."
+    cargo llvm-cov nextest --config-file nextest.toml --profile it-intree --no-tests warn --all-features --lcov --output-path {{OUTPUT_DIR}}/it-intree-lcov.info
+
+    echo "✅ Coverage report generated: {{OUTPUT_DIR}}/it-intree-lcov.info"
+
+# Run integration tests (public API) with code coverage
+test-integration-public-cov OUTPUT_DIR=OUTPUT_LCOV_DIR:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-llvm-cov and cargo-nextest are installed
+    if ! command -v "cargo-llvm-cov" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-llvm-cov' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-llvm-cov using cargo:"
+        >&2 echo "  cargo install cargo-llvm-cov"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    # Ensure output directory exists
+    mkdir -p {{OUTPUT_DIR}}
+
+    echo "Running integration tests (public API) with coverage..."
+    cargo llvm-cov nextest --config-file nextest.toml --profile it-public --no-tests warn --all-features --test '*' --lcov --output-path {{OUTPUT_DIR}}/it-public-lcov.info
+
+    echo "✅ Coverage report generated: {{OUTPUT_DIR}}/it-public-lcov.info"
+
+# Run end-to-end tests (tests package) with code coverage
+test-e2e-cov OUTPUT_DIR=OUTPUT_LCOV_DIR:
+    #!/usr/bin/env bash
+    set -e # Exit on error
+
+    # Check if cargo-llvm-cov and cargo-nextest are installed
+    if ! command -v "cargo-llvm-cov" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-llvm-cov' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-llvm-cov using cargo:"
+        >&2 echo "  cargo install cargo-llvm-cov"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    if ! command -v "cargo-nextest" &> /dev/null; then
+        >&2 echo "=============================================================="
+        >&2 echo "Required command 'cargo-nextest' not available ❌"
+        >&2 echo ""
+        >&2 echo "Please install cargo-nextest using cargo:"
+        >&2 echo "  cargo install --locked cargo-nextest@^0.9"
+        >&2 echo "=============================================================="
+        exit 1
+    fi
+
+    # Ensure output directory exists
+    mkdir -p {{OUTPUT_DIR}}
+
+    echo "Running end-to-end tests with coverage..."
+    cargo llvm-cov nextest --config-file nextest.toml --profile e2e --all-features --lcov --output-path {{OUTPUT_DIR}}/e2e-lcov.info
+
+    echo "✅ Coverage report generated: {{OUTPUT_DIR}}/e2e-lcov.info"
+
+
+## Codegen
+
+alias codegen := gen
+
+# Run all codegen tasks
+gen: \
+    gen-tests-fetch-opencli-schema
+
+### OpenCLI specification download
+SCHEMAS_DIR := "tests/tests/assets"
+
+# Download the OpenCLI specification schema (RUSTFLAGS="--cfg fetch_opencli_schema" cargo build)
+gen-tests-fetch-opencli-schema DEST_DIR=SCHEMAS_DIR:
+    RUSTFLAGS="--cfg fetch_opencli_schema" cargo build -p tests
+    @echo "OpenCLI spec downloaded to {{DEST_DIR}}/opencli.spec.json"
 
 
 ## Misc

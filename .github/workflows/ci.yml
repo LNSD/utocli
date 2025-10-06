@@ -14,7 +14,6 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: full
-  NEXTEST_NO_TESTS: warn
 
 jobs:
   format:
@@ -31,7 +30,10 @@ jobs:
           cache: false
           rustflags: ''
 
-      - run: cargo +nightly fmt --all -- --check
+      - name: Install just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3
+
+      - run: just fmt-check
 
   test:
     runs-on: ubuntu-latest
@@ -47,8 +49,8 @@ jobs:
           cache: true
           rustflags: ''
 
-      - name: Cache rust build files
-        uses: Leafwing-Studios/cargo-cache@43ec9a5bad6e7f174e7fc65dcf533de75ff65881 # v2
+      - name: Install just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3
 
       - name: Install Cargo LLVM cov
         uses: baptiste0928/cargo-install@b687c656bda5733207e629b50a22bf68974a0305 # v3
@@ -62,36 +64,88 @@ jobs:
           version: ^0.9
 
       ## Linting
-      - name: Cargo clippy
-        run: cargo clippy --all-features --tests -- -D warnings --force-warn deprecated --force-warn dead-code
+      - run: just clippy
 
       ## Tests
       - name: Unit tests
-        run: cargo llvm-cov nextest --all-features 'tests::' --lcov --output-path unit-lcov.info -- --skip 'tests::it_'
+        run: just test-unit-cov
 
       - name: Doc tests
         # TODO: Collect doc tests coverage once nextest supports it
         # https://nexte.st/docs/integrations/test-coverage/?h=doc#collecting-coverage-data-from-doctests
-        run: cargo test --all-features --doc
+        run: just test-doc
 
       - name: Integration tests (in-tree)
-        run: cargo llvm-cov nextest --all-features 'tests::it_' --lcov --output-path it-intree-lcov.info
+        run: just test-it-intree-cov
 
-      - name: Integration tests (public api)
-        run: cargo llvm-cov nextest --all-features --test '*' --lcov --output-path it-public-lcov.info
+      - name: Integration tests (public API)
+        run: just test-it-public-cov
+
+      - name: E2E tests
+        run: just test-e2e-cov
 
       - name: Upload unit tests coverage report to codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          files: unit-lcov.info
+          files: target/lcov/unit-lcov.info
           flags: unit
 
-      - name: Upload integration tests coverage report to codecov
+      - name: Upload integration tests (in-tree) coverage report to codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          files: it-intree-lcov.info,it-public-lcov.info
-          flags: integration
+          files: target/lcov/it-intree-lcov.info
+          flags: integration-intree
+
+      - name: Upload integration tests (public API) coverage report to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: target/lcov/it-public-lcov.info
+          flags: integration-public
+
+      - name: Upload E2E tests coverage report to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: target/lcov/e2e-lcov.info
+          flags: e2e
+
+  # Check generated code is up to date
+  gen-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
+        with:
+          cache: true
+          rustflags: ''
+
+      - name: Install just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3
+
+      - run: just gen
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            printf "❌ Generated code is out of date. Please run 'just gen' and commit the changes.\n"
+
+            printf "\n📄 Files with changes:\n"
+            git status --porcelain
+
+            printf "\n🔍 Detailed diff:\n"
+            git diff --color=always
+
+            exit 1
+          else
+            printf "✅ Generated code is up to date.\n"
+          fi
