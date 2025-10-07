@@ -1629,6 +1629,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "utocli-derive"
+version = "0.0.0"
+
+[[package]]
 name = "uuid"
 version = "1.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

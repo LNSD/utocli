@@ -1,9 +1,10 @@
 [workspace]
 resolver = "3"
-members = [ 
-  "crates/utocli",
-  "crates/utocli-core",
-  "tests",
+members = [
+    "crates/utocli",
+    "crates/utocli-core",
+    "crates/utocli-derive",
+    "tests",
 ]
 
 [workspace.package]
