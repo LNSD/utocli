@@ -10,7 +10,7 @@ use utocli::opencli::{
 };
 
 #[test]
-fn build_opencli_with_complete_spec_succeeds() {
+fn generate_opencli_spec_using_builder_succeeds() {
     //* Given
     let info = build_info();
     let external_docs = build_external_docs();
@@ -43,7 +43,7 @@ fn build_opencli_with_complete_spec_succeeds() {
 }
 
 #[test]
-fn serialize_opencli_to_yaml_succeeds() {
+fn serialize_opencli_spec_using_builder_to_yaml_succeeds() {
     //* Given
     let info = build_info();
     let external_docs = build_external_docs();
@@ -155,6 +155,17 @@ fn build_components() -> Components {
     ));
     schemas.insert("Error".to_string(), RefOr::T(error_schema));
 
+    // Severity enum schema
+    let severity_schema = Schema::Object(Box::new(
+        Object::new()
+            .schema_type(SchemaType::String)
+            .enum_values(vec![
+                serde_json::Value::String("Error".to_string()),
+                serde_json::Value::String("Warning".to_string()),
+            ]),
+    ));
+    schemas.insert("Severity".to_string(), RefOr::T(severity_schema));
+
     // ValidationError schema
     let validation_error_schema = Schema::Object(Box::new(
         Object::new()
@@ -164,7 +175,9 @@ fn build_components() -> Components {
                 props.insert(
                     "line".to_string(),
                     RefOr::T(Schema::Object(Box::new(
-                        Object::new().schema_type(SchemaType::Integer),
+                        Object::new()
+                            .schema_type(SchemaType::Integer)
+                            .format(SchemaFormat::Int32),
                     ))),
                 );
                 props.insert(
@@ -175,14 +188,9 @@ fn build_components() -> Components {
                 );
                 props.insert(
                     "severity".to_string(),
-                    RefOr::T(Schema::Object(Box::new(
-                        Object::new()
-                            .schema_type(SchemaType::String)
-                            .enum_values(vec![
-                                serde_json::Value::String("error".to_string()),
-                                serde_json::Value::String("warning".to_string()),
-                            ]),
-                    ))),
+                    RefOr::Ref(Ref {
+                        ref_path: "#/components/schemas/Severity".to_string(),
+                    }),
                 );
                 props
             })
@@ -229,11 +237,30 @@ fn build_components() -> Components {
                 );
                 props
             })
-            .required(vec!["valid".to_string(), "file".to_string()]),
+            .required(vec![
+                "valid".to_string(),
+                "file".to_string(),
+                "errors".to_string(),
+            ]),
     ));
     schemas.insert(
         "ValidationResult".to_string(),
         RefOr::T(validation_result_schema),
+    );
+
+    // GeneratedFileType enum schema
+    let generated_file_type_schema = Schema::Object(Box::new(
+        Object::new()
+            .schema_type(SchemaType::String)
+            .enum_values(vec![
+                serde_json::Value::String("Source".to_string()),
+                serde_json::Value::String("Documentation".to_string()),
+                serde_json::Value::String("Configuration".to_string()),
+            ]),
+    ));
+    schemas.insert(
+        "GeneratedFileType".to_string(),
+        RefOr::T(generated_file_type_schema),
     );
 
     // GeneratedFile schema
@@ -251,20 +278,16 @@ fn build_components() -> Components {
                 props.insert(
                     "size".to_string(),
                     RefOr::T(Schema::Object(Box::new(
-                        Object::new().schema_type(SchemaType::Integer),
+                        Object::new()
+                            .schema_type(SchemaType::Integer)
+                            .format(SchemaFormat::Int64),
                     ))),
                 );
                 props.insert(
                     "type".to_string(),
-                    RefOr::T(Schema::Object(Box::new(
-                        Object::new()
-                            .schema_type(SchemaType::String)
-                            .enum_values(vec![
-                                serde_json::Value::String("source".to_string()),
-                                serde_json::Value::String("documentation".to_string()),
-                                serde_json::Value::String("configuration".to_string()),
-                            ]),
-                    ))),
+                    RefOr::Ref(Ref {
+                        ref_path: "#/components/schemas/GeneratedFileType".to_string(),
+                    }),
                 );
                 props
             })

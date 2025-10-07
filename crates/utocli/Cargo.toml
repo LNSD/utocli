@@ -8,6 +8,12 @@ repository.workspace = true
 version.workspace = true
 
 [features]
+## Enable derive macros for auto-generating OpenCLI schemas.
+##
+## When enabled, provides `ToSchema`, `ToParameter`, and `ToResponse` derive macros
+## from the `utocli-derive` crate for automatic schema generation.
+macros = ["dep:utocli-derive"]
+
 ## Preserve insertion order in maps instead of using sorted order.
 ##
 ## When enabled, uses `IndexMap` instead of `BTreeMap` for all map types in the OpenCLI specification,
@@ -16,6 +22,15 @@ preserve_order = ["utocli-core/preserve_order"]
 
 [dependencies]
 utocli-core = { path = "../utocli-core" }
+utocli-derive = { path = "../utocli-derive", optional = true }
+
 
 [lints]
 workspace = true
+
+# Passing arguments to the docsrs builder in order to properly document cfg's.
+# More information: https://docs.rs/about/builds#cross-compiling
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+rustc-args = ["--cfg", "docsrs"]

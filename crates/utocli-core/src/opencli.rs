@@ -48,16 +48,9 @@ builder! {
         /// Core metadata about the CLI application.
         pub info: Info,
 
-        /// The commands exposed by the CLI application.
-        pub commands: Commands,
-
-        /// Reusable component definitions.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub components: Option<Components>,
-
-        /// Tags for organizing commands into groups.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub tags: Option<Vec<Tag>>,
+        /// External documentation reference.
+        #[serde(rename = "externalDocs", skip_serializing_if = "Option::is_none")]
+        pub external_docs: Option<ExternalDocs>,
 
         /// Platform and architecture support information.
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -67,9 +60,16 @@ builder! {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub environment: Option<Vec<EnvironmentVariable>>,
 
-        /// External documentation reference.
-        #[serde(rename = "externalDocs", skip_serializing_if = "Option::is_none")]
-        pub external_docs: Option<ExternalDocs>,
+        /// Tags for organizing commands into groups.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub tags: Option<Vec<Tag>>,
+
+        /// The commands exposed by the CLI application.
+        pub commands: Commands,
+
+        /// Reusable component definitions.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub components: Option<Components>,
     }
 }
 
@@ -78,12 +78,12 @@ impl Default for OpenCliBuilder {
         Self {
             opencli: String::from("1.0.0"),
             info: Info::new("", ""),
-            commands: Commands::new(),
-            components: None,
-            tags: None,
+            external_docs: None,
             platforms: None,
             environment: None,
-            external_docs: None,
+            tags: None,
+            commands: Commands::new(),
+            components: None,
         }
     }
 }
@@ -94,12 +94,12 @@ impl OpenCli {
         Self {
             opencli: "1.0.0".to_string(),
             info,
-            commands: Commands::new(),
-            components: None,
-            tags: None,
+            external_docs: None,
             platforms: None,
             environment: None,
-            external_docs: None,
+            tags: None,
+            commands: Commands::new(),
+            components: None,
         }
     }
 
