@@ -11,10 +11,11 @@ _Auto-generate OpenCLI specifications_
 
 This repository contains the following crates:
 
-| Name                                |                                           Latest version                                            |                                    Documentation                                     |
-|:------------------------------------|:---------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------:|
-| [utocli](./crates/utocli)           |        [![utocli](https://img.shields.io/crates/v/utocli)](https://crates.io/crates/utocli)         |      [![docs.rs](https://img.shields.io/docsrs/utocli)](https://docs.rs/utocli)      |
-| [utocli-core](./crates/utocli-core) | [![utocli-core](https://img.shields.io/crates/v/utocli-core)](https://crates.io/crates/utocli-core) | [![docs.rs](https://img.shields.io/docsrs/utocli-core)](https://docs.rs/utocli-core) |
+| Name                                    |                                              Latest version                                               |                                      Documentation                                       |
+|:----------------------------------------|:---------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
+| [utocli](./crates/utocli)               |           [![utocli](https://img.shields.io/crates/v/utocli)](https://crates.io/crates/utocli)            |        [![docs.rs](https://img.shields.io/docsrs/utocli)](https://docs.rs/utocli)        |
+| [utocli-core](./crates/utocli-core)     |    [![utocli-core](https://img.shields.io/crates/v/utocli-core)](https://crates.io/crates/utocli-core)    |   [![docs.rs](https://img.shields.io/docsrs/utocli-core)](https://docs.rs/utocli-core)   |
+| [utocli-derive](./crates/utocli-derive) | [![utocli-derive](https://img.shields.io/crates/v/utocli-derive)](https://crates.io/crates/utocli-derive) | [![docs.rs](https://img.shields.io/docsrs/utocli-derive)](https://docs.rs/utocli-derive) |
 
 ## License
 
