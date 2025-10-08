@@ -1,0 +1,181 @@
+---
+source: tests/tests/it_derive_clap_kitchen_sink.rs
+expression: json_output
+---
+{
+  "ocs": {
+    "summary": "Open CLI Spec tool",
+    "parameters": [
+      {
+        "name": "verbose",
+        "in": "flag",
+        "alias": [
+          "v"
+        ],
+        "description": "Enable verbose logging",
+        "scope": "inherited",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "config",
+        "in": "option",
+        "alias": [
+          "c"
+        ],
+        "description": "Path to configuration file",
+        "required": false,
+        "scope": "inherited",
+        "schema": {
+          "type": "string",
+          "format": "path",
+          "example": "~/.config/ocs/config.yaml"
+        }
+      }
+    ]
+  },
+  "/validate": {
+    "summary": "Validate CLI specification",
+    "operationId": "validateCommand",
+    "aliases": [
+      "val",
+      "check"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "in": "argument",
+        "position": 1,
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "path",
+          "example": "opencli.yaml"
+        }
+      },
+      {
+        "name": "strict",
+        "in": "flag",
+        "alias": [
+          "s"
+        ],
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "output",
+        "in": "option",
+        "alias": [
+          "o"
+        ],
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "json",
+            "yaml",
+            "text"
+          ],
+          "default": "text"
+        }
+      }
+    ]
+  },
+  "/generate": {
+    "summary": "Generate CLI code",
+    "operationId": "generateCommand",
+    "aliases": [
+      "gen",
+      "codegen"
+    ],
+    "parameters": [
+      {
+        "name": "spec",
+        "in": "argument",
+        "position": 1,
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "path",
+          "example": "SPEC"
+        }
+      },
+      {
+        "name": "language",
+        "in": "option",
+        "alias": [
+          "l"
+        ],
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "go",
+            "python",
+            "rust"
+          ]
+        }
+      },
+      {
+        "name": "output_dir",
+        "in": "option",
+        "alias": [
+          "o"
+        ],
+        "description": "Output directory for generated code",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "path",
+          "default": "./generated",
+          "example": "DIR"
+        }
+      }
+    ]
+  },
+  "/lint": {
+    "summary": "Lint CLI specification files",
+    "operationId": "lintCommand",
+    "aliases": [
+      "check-style"
+    ],
+    "parameters": [
+      {
+        "name": "files",
+        "in": "argument",
+        "position": 1,
+        "description": "Paths to CLI specification files to lint",
+        "required": true,
+        "arity": {
+          "min": 1
+        },
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "rules",
+        "in": "option",
+        "alias": [
+          "r"
+        ],
+        "required": false,
+        "arity": {
+          "min": 1,
+          "max": 10
+        },
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  }
+}

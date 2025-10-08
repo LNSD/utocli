@@ -144,3 +144,48 @@ pub trait IntoResponses {
     /// Exit codes are strings like "0", "1", "2" etc., following shell exit code conventions.
     fn responses() -> std::collections::BTreeMap<String, opencli::RefOr<opencli::Response>>;
 }
+
+/// Trait for types that provide a collection of OpenCLI commands.
+///
+/// This trait is used for clap integration, where a `#[derive(Subcommand)]` enum
+/// gets converted into a collection of OpenCLI commands. Each enum variant becomes
+/// a separate command in the collection.
+///
+/// This trait is implemented via [`#[derive(CommandCollection)]`] (to be added) and there
+/// is no need to implement this trait manually.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use clap::Subcommand;
+/// use utocli::CommandCollection;
+///
+/// #[derive(Subcommand, CommandCollection)]
+/// enum Commands {
+///     /// Validate a file
+///     Validate {
+///         /// Path to the file
+///         file: String,
+///     },
+///     /// Generate code
+///     Generate {
+///         /// Output directory
+///         output: String,
+///     },
+/// }
+///
+/// // Generates:
+/// // {
+/// //   "/validate": Command { ... },
+/// //   "/generate": Command { ... }
+/// // }
+/// let commands = Commands::commands();
+/// ```
+pub trait CommandCollection {
+    /// Returns an ordered map of command paths to commands.
+    ///
+    /// Command paths follow OpenCLI convention:
+    /// - Root commands: just the name (e.g., "ocs")
+    /// - Subcommands: path format with leading slash (e.g., "/validate", "/generate")
+    fn commands() -> opencli::Map<String, opencli::Command>;
+}

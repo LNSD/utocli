@@ -14,6 +14,13 @@ version.workspace = true
 ## from the `utocli-derive` crate for automatic schema generation.
 macros = ["dep:utocli-derive"]
 
+## Enable clap integration for generating OpenCLI specs from clap Parser types.
+##
+## When enabled, provides `OpenCli` and `CommandCollection` derive macros that work
+## with clap's `Parser` and `Subcommand` derives to automatically generate OpenCLI
+## specifications from CLI definitions.
+clap = ["dep:utocli-clap"]
+
 ## Preserve insertion order in maps instead of using sorted order.
 ##
 ## When enabled, uses `IndexMap` instead of `BTreeMap` for all map types in the OpenCLI specification,
@@ -23,6 +30,7 @@ preserve_order = ["utocli-core/preserve_order"]
 [dependencies]
 utocli-core = { path = "../utocli-core" }
 utocli-derive = { path = "../utocli-derive", optional = true }
+utocli-clap = { path = "../utocli-clap", optional = true }
 
 
 [lints]
