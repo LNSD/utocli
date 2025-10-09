@@ -1,9 +1,6 @@
 //! Simple test to verify clap derive detection works
 
-use clap::Parser;
-use utocli::clap::OpenCli;
-
-#[derive(Parser, OpenCli)]
+#[derive(clap::Parser, utocli::clap::OpenCli)]
 #[command(name = "test")]
 struct TestCli {
     #[arg(short)]

@@ -32,7 +32,7 @@ pub fn infer_parameter_in(field: &Field, arg_attrs: &ClapArgAttrs) -> Result<Str
 }
 
 /// Check if a type is bool.
-fn is_bool_type(ty: &Type) -> bool {
+pub(crate) fn is_bool_type(ty: &Type) -> bool {
     if let Type::Path(type_path) = ty
         && let Some(ident) = type_path.path.get_ident()
     {
@@ -162,10 +162,33 @@ fn unwrap_vec_type(ty: &Type) -> Option<&Type> {
 /// Map clap arg attributes to OpenCLI parameter.
 ///
 /// This generates TokenStream for creating a Parameter.
+/// The `is_root_command` flag indicates whether this parameter belongs to the root command.
 pub fn map_arg_to_parameter(
     field: &Field,
     arg_attrs: &ClapArgAttrs,
     opencli_attrs: &OpenCliArgAttrs,
+) -> Result<TokenStream2, Diagnostics> {
+    map_arg_to_parameter_internal(field, arg_attrs, opencli_attrs, false)
+}
+
+/// Map clap arg attributes to OpenCLI parameter for root command.
+///
+/// This generates TokenStream for creating a Parameter.
+/// Root command parameters have different behavior for the "in" field.
+pub fn map_arg_to_parameter_for_root(
+    field: &Field,
+    arg_attrs: &ClapArgAttrs,
+    opencli_attrs: &OpenCliArgAttrs,
+) -> Result<TokenStream2, Diagnostics> {
+    map_arg_to_parameter_internal(field, arg_attrs, opencli_attrs, true)
+}
+
+/// Internal implementation of parameter mapping with root command flag.
+fn map_arg_to_parameter_internal(
+    field: &Field,
+    arg_attrs: &ClapArgAttrs,
+    opencli_attrs: &OpenCliArgAttrs,
+    is_root_command: bool,
 ) -> Result<TokenStream2, Diagnostics> {
     // Get parameter name from field or long attribute
     let field_name = field
@@ -187,17 +210,16 @@ pub fn map_arg_to_parameter(
     let param_in = infer_parameter_in(field, arg_attrs)?;
 
     // Build parameter
+    // Options (non-flag, non-argument parameters) should NOT have "in" field
+    // Only arguments and flags have explicit "in" field
     let mut param_tokens = match param_in.as_str() {
         "flag" => quote! {
             ::utocli::Parameter::new_flag(#param_name)
         },
-        "option" => quote! {
-            ::utocli::Parameter::new_option(#param_name)
-        },
         "argument" => quote! {
             ::utocli::Parameter::new_argument(#param_name, 1u32)
         },
-        _ => quote! {
+        "option" | _ => quote! {
             ::utocli::Parameter::new(#param_name)
         },
     };
@@ -229,23 +251,49 @@ pub fn map_arg_to_parameter(
         });
     }
 
-    // Add required flag based on Option type
-    if param_in != "flag" {
-        if is_option_type(&field.ty) {
-            param_tokens.extend(quote! {
-                .required(false)
-            });
-        } else {
-            param_tokens.extend(quote! {
-                .required(true)
-            });
+    // Add required flag based on Option type and presence of default value
+    // Only add "required" field for arguments and options (not for flags or root options)
+    // Don't add "required" if the parameter has a default value
+    if param_in == "argument" || (param_in == "option" && !is_root_command) {
+        let has_default =
+            arg_attrs.default_value.is_some() || (is_bool_type(&field.ty) && arg_attrs.global);
+
+        if !has_default {
+            if is_option_type(&field.ty) {
+                param_tokens.extend(quote! {
+                    .required(false)
+                });
+            } else if arg_attrs.required {
+                param_tokens.extend(quote! {
+                    .required(true)
+                });
+            } else {
+                param_tokens.extend(quote! {
+                    .required(true)
+                });
+            }
         }
     }
 
-    // Add scope (inherited for global parameters)
-    if arg_attrs.global {
+    // Add scope (inherited for global parameters, local otherwise)
+    // Check for explicit opencli scope override first
+    if let Some(ref scope_str) = opencli_attrs.scope {
+        let scope_variant = match scope_str.as_str() {
+            "inherited" => quote! { ::utocli::ParameterScope::Inherited },
+            "local" => quote! { ::utocli::ParameterScope::Local },
+            _ => quote! { ::utocli::ParameterScope::Local },
+        };
+        param_tokens.extend(quote! {
+            .scope(#scope_variant)
+        });
+    } else if arg_attrs.global {
         param_tokens.extend(quote! {
             .scope(::utocli::ParameterScope::Inherited)
+        });
+    } else {
+        // Default to local scope for non-global parameters
+        param_tokens.extend(quote! {
+            .scope(::utocli::ParameterScope::Local)
         });
     }
 
@@ -260,6 +308,28 @@ pub fn map_arg_to_parameter(
         param_tokens.extend(quote! {
             .arity(#arity)
         });
+    }
+
+    // Add extensions if present (x-*)
+    if !opencli_attrs.extensions.is_empty() {
+        // Build extension inserts
+        let ext_inserts: Vec<_> = opencli_attrs
+            .extensions
+            .iter()
+            .map(|(key, value)| {
+                quote! {
+                    ext_map.insert(#key.to_string(), serde_json::Value::String(#value.to_string()));
+                }
+            })
+            .collect();
+
+        param_tokens = quote! {
+            {
+                let mut ext_map = ::utocli::Map::new();
+                #(#ext_inserts)*
+                #param_tokens.extensions(::utocli::Extensions::from(ext_map))
+            }
+        };
     }
 
     Ok(param_tokens)
@@ -344,6 +414,17 @@ fn build_schema_with_constraints(
                 let mut schema = #schema_tokens;
                 if let ::utocli::RefOr::T(::utocli::Schema::Object(ref mut obj)) = schema {
                     obj.default = Some(serde_json::Value::String(#default_value.to_string()));
+                }
+                schema
+            }
+        };
+    } else if is_bool_type(ty) && arg_attrs.global {
+        // Only global boolean flags default to false
+        schema_tokens = quote! {
+            {
+                let mut schema = #schema_tokens;
+                if let ::utocli::RefOr::T(::utocli::Schema::Object(ref mut obj)) = schema {
+                    obj.default = Some(serde_json::Value::Bool(false));
                 }
                 schema
             }

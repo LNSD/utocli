@@ -3,6 +3,7 @@
 //! This module handles extraction of argument metadata from clap's arg attributes
 //! and maps them to OpenCLI parameter fields.
 
+use quote::ToTokens;
 use syn::{Attribute, Lit};
 
 use crate::diagnostics::Diagnostics;
@@ -250,6 +251,8 @@ pub struct OpenCliArgAttrs {
     pub arity: Option<(Option<usize>, Option<usize>)>,
     /// Mark as deprecated
     pub deprecated: bool,
+    /// Custom extensions (x-*)
+    pub extensions: Vec<(String, String)>,
 }
 
 impl OpenCliArgAttrs {
@@ -277,6 +280,11 @@ impl OpenCliArgAttrs {
                     result.description = Some(parse_string_value(&meta)?);
                 } else if path.is_ident("deprecated") {
                     result.deprecated = true;
+                } else if path.to_token_stream().to_string().starts_with("x_") {
+                    // Handle custom extensions (x-*)
+                    let key = path.to_token_stream().to_string().replace('_', "-");
+                    let value = parse_string_value(&meta)?;
+                    result.extensions.push((key, value));
                 } else if path.is_ident("arity") {
                     // Parse arity(min = 1, max = 3) or arity(min = 1)
                     let content;

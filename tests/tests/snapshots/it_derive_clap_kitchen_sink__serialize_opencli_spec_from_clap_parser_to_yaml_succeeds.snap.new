@@ -1,0 +1,265 @@
+---
+source: tests/tests/it_derive_clap_kitchen_sink.rs
+assertion_line: 41
+expression: yaml_output
+---
+opencli: 1.0.0
+info:
+  title: Open Command-Line Interface Specification
+  description: Standard for defining command-line interfaces
+  version: 1.0.0
+  contact:
+    name: OpenCLI Working Group
+    url: https://github.com/nrranjithnr/open-cli-specification
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+externalDocs:
+  description: Find out more about OpenCLI
+  url: https://www.openclispec.org
+platforms:
+- name: linux
+  architectures:
+  - amd64
+  - arm64
+- name: darwin
+  architectures:
+  - amd64
+  - arm64
+- name: windows
+  architectures:
+  - amd64
+  - arm64
+environment:
+- name: OCS_CONFIG_PATH
+  description: Override default configuration file path
+- name: OCS_VERBOSE
+  description: Enable verbose output globally
+- name: OCS_QUIET
+  description: Suppress non-essential output globally
+tags:
+- name: core
+  description: Core commands and utilities
+- name: data
+  description: Data processing commands
+- name: auth
+  description: Authentication and user management
+- name: system
+  description: System-level commands and utilities
+commands:
+  ocs:
+    summary: Open CLI Spec tool
+    description: Main entry point for the Open CLI Specification tool
+    operationId: rootCommand
+    aliases:
+    - opencli
+    tags:
+    - core
+    parameters:
+    - name: config
+      alias:
+      - c
+      description: Path to configuration file
+      scope: inherited
+      schema:
+        type: string
+        format: path
+        example: ~/.config/ocs/config.yaml
+    - name: verbose
+      in: flag
+      alias:
+      - v
+      description: Enable verbose output
+      scope: inherited
+      schema:
+        type: boolean
+        default: false
+    - name: quiet
+      in: flag
+      alias:
+      - q
+      description: Suppress non-essential output
+      scope: inherited
+      schema:
+        type: boolean
+        default: false
+    - name: version
+      in: flag
+      alias:
+      - V
+      description: Show CLI version
+      scope: local
+      schema:
+        type: boolean
+    - name: help
+      in: flag
+      alias:
+      - h
+      description: Show help information
+      scope: local
+      schema:
+        type: boolean
+  /validate:
+    summary: Validate CLI specification
+    description: Validate a CLI specification file against the OpenCLI standard
+    operationId: validateCommand
+    aliases:
+    - val
+    - check
+    tags:
+    - core
+    parameters:
+    - name: file
+      in: argument
+      position: 1
+      description: Path to the CLI specification file
+      required: true
+      scope: local
+      schema:
+        type: string
+        format: path
+        example: opencli.yaml
+      x-completion: file
+      x-validation: file-exists
+    - name: strict
+      in: flag
+      alias:
+      - s
+      description: Enable strict validation mode
+      scope: local
+      schema:
+        type: boolean
+    - name: output
+      alias:
+      - o
+      description: Output format for validation results
+      scope: local
+      schema:
+        type: string
+        enum:
+        - json
+        - yaml
+        - text
+        default: text
+    responses:
+      '0':
+        description: Validation successful
+      '1':
+        description: Validation failed
+      '2':
+        description: File not found or not readable
+    x-cli-category: validation
+    x-performance: fast
+  /generate:
+    summary: Generate CLI code
+    description: Generate CLI implementation code from specification
+    operationId: generateCommand
+    aliases:
+    - gen
+    - codegen
+    tags:
+    - core
+    parameters:
+    - name: spec
+      in: argument
+      position: 1
+      description: Path to the CLI specification file
+      required: true
+      scope: local
+      schema:
+        type: string
+        format: path
+        example: my-cli.yaml
+    - name: language
+      alias:
+      - l
+      description: Target programming language
+      required: true
+      scope: local
+      schema:
+        type: string
+        enum:
+        - go
+        - python
+        - javascript
+        - typescript
+        - rust
+        - java
+        example: go
+    - name: output_dir
+      alias:
+      - o
+      description: Output directory for generated code
+      scope: local
+      schema:
+        type: string
+        format: path
+        default: ./generated
+        example: DIR
+    - name: template
+      alias:
+      - t
+      description: Code generation template
+      scope: local
+      schema:
+        type: string
+        enum:
+        - basic
+        - advanced
+        - framework
+        default: basic
+    responses:
+      '0':
+        description: Code generation successful
+      '1':
+        description: Generation failed
+  /lint:
+    summary: Lint CLI specification files
+    description: Check multiple CLI specification files for style and best practices
+    operationId: lintCommand
+    aliases:
+    - check-style
+    tags:
+    - core
+    parameters:
+    - name: files
+      in: argument
+      position: 1
+      description: Paths to CLI specification files to lint
+      required: true
+      scope: local
+      arity:
+        min: 1
+      schema:
+        type: array
+        items:
+          type: string
+    - name: rules
+      alias:
+      - r
+      description: Specific linting rules to apply
+      required: false
+      scope: local
+      arity:
+        min: 1
+        max: 10
+      schema:
+        type: array
+        items:
+          type: string
+    - name: exclude
+      alias:
+      - x
+      description: Rules to exclude from linting
+      required: false
+      scope: local
+      arity:
+        min: 0
+        max: 5
+      schema:
+        type: array
+        items:
+          type: string
+    responses:
+      '0':
+        description: Linting completed successfully
