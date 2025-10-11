@@ -1,4 +1,18 @@
-//! Tests for ToSchema derive macro.
+//! Base tests for ToSchema derive macro.
+//!
+//! This test suite covers fundamental ToSchema functionality:
+//! - Basic struct and enum schema generation
+//! - Custom functions (schema_with)
+//! - Inline attribute
+//! - Schema naming (as attribute)
+//! - Default values (schema default attribute)
+//!
+//! For specialized tests, see:
+//! - it_derive_schema_struct.rs: Struct-specific tests
+//! - it_derive_schema_enum.rs: Enum-specific tests
+//! - it_derive_schema_attributes.rs: Schema attributes
+//! - it_derive_serde.rs: Serde attribute integration
+//! - it_derive_validation.rs: Validation attributes
 
 #![allow(dead_code)]
 
@@ -84,55 +98,6 @@ fn derive_to_schema_with_enum_generates_string_schema_with_enum_values() {
         .enum_values
         .expect("enum_values should be present for enums");
     assert_eq!(enum_values.len(), 3, "should have 3 enum variants");
-}
-
-#[test]
-fn derive_to_schema_with_custom_attributes_respects_directives() {
-    //* Given
-    /// Test struct with custom schema attributes
-    #[derive(utocli::ToSchema)]
-    #[schema(description = "Custom description", title = "CustomUser")]
-    struct CustomUser {
-        #[schema(description = "User ID", rename = "userId")]
-        id: u64,
-
-        #[schema(skip)]
-        internal_field: String,
-    }
-
-    //* When
-    let schema = CustomUser::schema();
-
-    //* Then
-    let Schema::Object(obj) = schema else {
-        panic!("Expected Object schema for struct with custom attributes");
-    };
-
-    // Check custom description
-    assert_eq!(
-        obj.description,
-        Some("Custom description".to_string()),
-        "should use custom description from schema attribute"
-    );
-
-    // Check that properties exist
-    assert!(
-        obj.properties.is_some(),
-        "struct should have properties defined"
-    );
-    let props = obj.properties.expect("properties should be present");
-
-    // Check that renamed field exists
-    assert!(
-        props.contains_key("userId"),
-        "renamed field should use custom name from schema attribute"
-    );
-
-    // Check that skipped field doesn't exist
-    assert!(
-        !props.contains_key("internal_field"),
-        "field with #[schema(skip)] should not appear in properties"
-    );
 }
 
 #[test]
@@ -346,93 +311,6 @@ fn derive_to_schema_with_custom_function_returns_complex_schema() {
     assert!(
         coord_schema.example.is_some(),
         "custom schema should include example"
-    );
-}
-
-#[test]
-fn derive_to_schema_with_validation_attributes_applies_constraints() {
-    //* Given
-    #[derive(utocli::ToSchema)]
-    struct ValidatedStruct {
-        /// Age must be between 0 and 150
-        #[schema(minimum = 0, maximum = 150)]
-        age: u8,
-
-        /// Username must be 3-20 characters and alphanumeric
-        #[schema(min_length = 3, max_length = 20, pattern = "^[a-zA-Z0-9]+$")]
-        username: String,
-
-        /// Score with decimal range
-        #[schema(minimum = 0.0, maximum = 100.0)]
-        score: f64,
-    }
-
-    //* When
-    let schema = ValidatedStruct::schema();
-
-    //* Then
-    let Schema::Object(obj) = schema else {
-        panic!("Expected Object schema");
-    };
-
-    let props = obj.properties.expect("should have properties");
-
-    // Check age field validations
-    let RefOr::T(Schema::Object(age_schema)) = props.get("age").expect("age field should exist")
-    else {
-        panic!("Expected inline schema for age field");
-    };
-
-    assert_eq!(
-        age_schema.minimum,
-        Some(0.0),
-        "age should have minimum constraint"
-    );
-    assert_eq!(
-        age_schema.maximum,
-        Some(150.0),
-        "age should have maximum constraint"
-    );
-
-    // Check username field validations
-    let RefOr::T(Schema::Object(username_schema)) =
-        props.get("username").expect("username field should exist")
-    else {
-        panic!("Expected inline schema for username field");
-    };
-
-    assert_eq!(
-        username_schema.min_length,
-        Some(3),
-        "username should have min_length constraint"
-    );
-    assert_eq!(
-        username_schema.max_length,
-        Some(20),
-        "username should have max_length constraint"
-    );
-    assert_eq!(
-        username_schema.pattern,
-        Some("^[a-zA-Z0-9]+$".to_string()),
-        "username should have pattern constraint"
-    );
-
-    // Check score field validations
-    let RefOr::T(Schema::Object(score_schema)) =
-        props.get("score").expect("score field should exist")
-    else {
-        panic!("Expected inline schema for score field");
-    };
-
-    assert_eq!(
-        score_schema.minimum,
-        Some(0.0),
-        "score should have minimum constraint"
-    );
-    assert_eq!(
-        score_schema.maximum,
-        Some(100.0),
-        "score should have maximum constraint"
     );
 }
 
