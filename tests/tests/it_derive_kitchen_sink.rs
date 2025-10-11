@@ -6,8 +6,8 @@
 #![allow(dead_code)]
 
 use utocli::{
-    Array, Command, Commands, Map, MediaType, Object, Parameter, ParameterScope, RefOr, Response,
-    Schema, SchemaFormat, SchemaType, ToSchema,
+    Array, Command, Commands, Map, MediaType, Object, OpenCli, Parameter, ParameterScope, RefOr,
+    Response, Schema, SchemaFormat, SchemaType, ToSchema,
 };
 
 #[test]
