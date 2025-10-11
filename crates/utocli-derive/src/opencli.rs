@@ -562,10 +562,10 @@ impl ToTokensDiagnostics for OpenCli {
 
                 let response_inserts = responses.iter().map(|resp| {
                     quote! {
-                        responses.insert(
-                            #resp::response_name().to_string(),
-                            ::utocli::RefOr::T(#resp::response())
-                        );
+                        {
+                            let (name, response) = <#resp as ::utocli::ToResponse>::response();
+                            responses.insert(name.to_string(), response);
+                        }
                     }
                 });
 

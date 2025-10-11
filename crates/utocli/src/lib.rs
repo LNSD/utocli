@@ -16,7 +16,7 @@ pub use utocli_core::{
     Architecture, Arity, Array, Command, CommandPath, Commands, Components, ComposeSchema, Contact,
     EnvironmentVariable, Extensions, ExternalDocs, Info, IntoResponses, License, Map, MediaType,
     Object, OpenCli, Parameter, ParameterIn, ParameterScope, Platform, PlatformName, Ref, RefOr,
-    Response, Schema, SchemaFormat, SchemaType, Tag, ToSchema,
+    Response, Schema, SchemaFormat, SchemaType, Tag, ToResponse, ToSchema,
 };
 // Re-export derive macros when the macros feature is enabled
 #[cfg(feature = "macros")]

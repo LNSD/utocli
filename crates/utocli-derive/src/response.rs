@@ -18,10 +18,6 @@ use crate::{
     doc_comment::parse_doc_comments,
 };
 
-// ============================================================================
-// SHARED INFRASTRUCTURE (used by both ToResponse and IntoResponses)
-// ============================================================================
-
 /// Parse helpers for response attributes.
 /// Matches utoipa-gen/src/path/response/derive.rs lines 27869-27892
 mod parse {
@@ -258,13 +254,16 @@ impl ToTokensDiagnostics for ResponseTuple<'_> {
                 let path = &res.ty;
                 if res.is_inline {
                     tokens.extend(quote! {
-                        <#path as ::utocli::ToResponse>::response()
+                        <#path as ::utocli::ToResponse>::response().1
                     });
                 } else {
                     tokens.extend(quote! {
-                        ::utocli::opencli::RefOr::Ref(::utocli::Ref {
-                            ref_path: format!("#/components/responses/{}", <#path as ::utocli::ToResponse>::response_name())
-                        })
+                        {
+                            let (name, _) = <#path as ::utocli::ToResponse>::response();
+                            ::utocli::opencli::RefOr::Ref(::utocli::Ref {
+                                ref_path: format!("#/components/responses/{}", name)
+                            })
+                        }
                     });
                 }
             }
@@ -335,10 +334,6 @@ impl ToTokensDiagnostics for ResponseTuple<'_> {
         Ok(())
     }
 }
-
-// ============================================================================
-// ToResponse DERIVE (for single response types)
-// ============================================================================
 
 /// Parsed response attributes from `#[response(...)]` for ToResponse derive.
 ///
@@ -466,15 +461,9 @@ impl ToTokensDiagnostics for ToResponse {
         let response_tokens = self.response.try_to_token_stream()?;
 
         tokens.extend(quote! {
-            impl #impl_generics #name #ty_generics #where_clause {
-                /// Generate the OpenCLI response for this type.
-                pub fn response() -> ::utocli::Response {
-                    #response_tokens
-                }
-
-                /// Get the response name for this type.
-                pub fn response_name() -> &'static str {
-                    stringify!(#name)
+            impl<'r> #impl_generics ::utocli::ToResponse<'r> for #name #ty_generics #where_clause {
+                fn response() -> (&'r str, ::utocli::RefOr<::utocli::Response>) {
+                    (stringify!(#name), ::utocli::RefOr::T(#response_tokens))
                 }
             }
         });
@@ -559,10 +548,6 @@ impl ToResponseUnitStructResponse<'_> {
         Ok(Self(response_value.into()))
     }
 }
-
-// ============================================================================
-// IntoResponses DERIVE (for multiple response variants - enums)
-// ============================================================================
 
 /// Parsed response attributes from `#[response(...)]` for IntoResponses derive.
 ///

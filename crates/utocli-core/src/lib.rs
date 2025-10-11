@@ -8,6 +8,7 @@
 mod builder_macros;
 mod compose_schema;
 pub mod opencli;
+mod to_response;
 mod to_schema;
 
 use std::collections::BTreeMap;
@@ -21,6 +22,7 @@ pub use self::{
         ParameterScope, Platform, PlatformName, Ref, RefOr, Response, Schema, SchemaFormat,
         SchemaType, Tag,
     },
+    to_response::ToResponse,
     to_schema::ToSchema,
 };
 
