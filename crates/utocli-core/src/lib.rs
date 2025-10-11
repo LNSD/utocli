@@ -10,17 +10,54 @@ mod compose_schema;
 pub mod opencli;
 mod to_schema;
 
+use std::collections::BTreeMap;
+
 // Re-export main types at the crate root for convenience
 pub use self::{
     compose_schema::{ComposeSchema, schema_or_compose},
     opencli::{
         Architecture, Arity, Array, Command, Commands, Components, Contact, EnvironmentVariable,
-        Extensions, ExternalDocs, Info, License, Map, MediaType, Object, OpenCli, Parameter,
-        ParameterIn, ParameterScope, Platform, PlatformName, Ref, RefOr, Response, Schema,
-        SchemaFormat, SchemaType, Tag,
+        Extensions, ExternalDocs, Info, License, Map, MediaType, Object, Parameter, ParameterIn,
+        ParameterScope, Platform, PlatformName, Ref, RefOr, Response, Schema, SchemaFormat,
+        SchemaType, Tag,
     },
     to_schema::ToSchema,
 };
+
+/// Trait for types that can generate OpenCLI specifications.
+///
+/// This trait is similar to utoipa's [`OpenApi`](https://docs.rs/utoipa/latest/utoipa/trait.OpenApi.html)
+/// trait, but adapted for CLI applications instead of REST APIs.
+///
+/// This trait is implemented via [`#[derive(OpenCli)]`][macro@crate::OpenCli] and there
+/// is no need to implement this trait manually.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use utocli::OpenCli;
+///
+/// #[derive(OpenCli)]
+/// #[opencli(
+///     info(
+///         title = "My CLI Tool",
+///         version = "1.0.0",
+///         description = "A sample CLI application"
+///     ),
+///     commands(build_root_command),
+///     tags(
+///         (name = "core", description = "Core commands")
+///     )
+/// )]
+/// struct CliDoc;
+///
+/// let spec = CliDoc::opencli();
+/// ```
+pub trait OpenCli {
+    /// Returns the [`opencli::OpenCli`] instance which can be parsed with serde
+    /// or served via CLI documentation tools.
+    fn opencli() -> opencli::OpenCli;
+}
 
 /// Trait for implementing OpenCLI Command object.
 ///
@@ -107,7 +144,7 @@ pub trait CommandPath {
 
     /// Returns [`opencli::Command`] describing the CLI command specification including
     /// parameters, responses, and metadata.
-    fn command() -> opencli::Command;
+    fn command() -> Command;
 }
 
 /// Trait for types that can be converted into multiple OpenCLI responses.
@@ -142,5 +179,5 @@ pub trait IntoResponses {
     /// Returns an ordered map of exit codes to responses.
     ///
     /// Exit codes are strings like "0", "1", "2" etc., following shell exit code conventions.
-    fn responses() -> std::collections::BTreeMap<String, opencli::RefOr<opencli::Response>>;
+    fn responses() -> BTreeMap<String, RefOr<Response>>;
 }

@@ -694,15 +694,14 @@ impl ToTokensDiagnostics for OpenCli {
         };
 
         tokens.extend(quote! {
-            impl #impl_generics #name #ty_generics #where_clause {
-                /// Generate the complete OpenCLI specification.
-                pub fn opencli() -> ::utocli::OpenCli {
+            impl #impl_generics ::utocli::OpenCli for #name #ty_generics #where_clause {
+                fn opencli() -> ::utocli::opencli::OpenCli {
                     let info = ::utocli::Info::new(#info_title, #info_version)
                         #info_desc_tokens
                         #info_contact_tokens
                         #info_license_tokens;
 
-                    ::utocli::OpenCli::new(info)
+                    ::utocli::opencli::OpenCli::new(info)
                         .commands(#commands_tokens)
                         #components_tokens
                         #tags_tokens
