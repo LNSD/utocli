@@ -11,11 +11,10 @@
 
 #![allow(dead_code)]
 
-use utocli::{IntoResponses, RefOr, Schema};
-
-// ============================================================================
-// ToResponse and IntoResponses AnyValue Tests
-// ============================================================================
+use utocli::{
+    IntoResponses as _, ToResponse as _,
+    opencli::{RefOr, Schema},
+};
 
 /// Test ToResponse with literal string example in content
 #[test]
@@ -29,9 +28,13 @@ fn to_response_with_literal_string_example_generates_correct_response() {
     }
 
     //* When
-    let response = MyResponse::response();
+    let (name, response_ref) = MyResponse::response();
+    let utocli::RefOr::T(response) = response_ref else {
+        panic!("expected T variant");
+    };
 
     //* Then
+    assert_eq!(name, "MyResponse");
     assert_eq!(
         response.description,
         Some("A successful response".to_string())
@@ -56,9 +59,13 @@ fn to_response_with_json_object_example_generates_correct_response() {
     }
 
     //* When
-    let response = MyResponse::response();
+    let (name, response_ref) = MyResponse::response();
+    let utocli::RefOr::T(response) = response_ref else {
+        panic!("expected T variant");
+    };
 
     //* Then
+    assert_eq!(name, "MyResponse");
     assert_eq!(
         response.description,
         Some("JSON response example".to_string())
@@ -84,9 +91,13 @@ fn to_response_with_json_macro_in_content_example_generates_correct_response() {
     }
 
     //* When
-    let response = MyResponse::response();
+    let (name, response_ref) = MyResponse::response();
+    let utocli::RefOr::T(response) = response_ref else {
+        panic!("expected T variant");
+    };
 
     //* Then
+    assert_eq!(name, "MyResponse");
     let content = response.content.expect("should have content");
     let media = content.get("application/json").expect("should have json");
     let example = media.example.as_ref().expect("should have example");
@@ -159,10 +170,6 @@ fn into_responses_with_multiple_variants_generates_correct_responses() {
     };
     assert_eq!(error.description, Some("Bad request".to_string()));
 }
-
-// ============================================================================
-// ToParameter AnyValue Tests
-// ============================================================================
 
 #[test]
 fn to_parameter_with_literal_string_example_and_default_generates_correct_values() {
